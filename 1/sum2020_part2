@@ -1,0 +1,79 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Problem statement: https://adventofcode.com/2020/day/1
+#
+# Given a list of numbers, find three that sum to 2020, and then
+# print their product. If no such pair exists, print nothing.
+
+use strict;
+
+# Finds indicies (i,j) with
+#   0 <= $left <= i < j <= $right <= $#{$entries}
+#   $target == ${$entries}[i] + ${$entries}[j]
+# assuming @{$entries} is sorted in ascending order.
+# If we find them, return the indices as a pair.
+# Otherwis, return a pair of undefs.
+sub find_pair($$$$) {
+  my ($target,$left,$right,$entries_ref) = (@_);
+  # We'll use two cursors to index the entries, one on the left and another on the right.
+  my $left = 0;
+  my $right = $#{$entries_ref}; # Index of the last entry.
+
+  # The invariant is that if the indices of the winning pair are positions (i,j)
+  # with i < j, then   $left <= i < j <= $right.
+  while ($left < $right) {
+    my $value_left = ${$entries_ref}[$left];
+    my $value_right = ${$entries_ref}[$right];
+    my $sum = $value_left + $value_right;
+    if ($sum == $target) {
+      # We found a winning pair!
+      # Clean up the text of the result.
+      return ($left, $right);
+    }
+    if ($sum < $target) {
+      # We are below target. We have to increase our estimate.
+      # We have two options: move the left cursor right, or the right
+      # cursor right. But by the invariant, the solution does not have
+      # one endpoint outside of [left, right].  So that eliminates
+      # moving the right marker right.  So move the left marker right.
+      $left++;
+    } elsif ($sum > $target) {
+      # Use similar logic to reason that we have to move the right
+      # marker left.
+      $right--;
+    }
+  }
+  return (undef, undef);
+}
+
+# Returns indices (i,j,k) which whose entries in @{$entries_ref} sum to $target.
+# If no such triple exists, returns a triple of undefs.
+sub find_triple($$) {
+  my ($target, $entries_ref) = @_;
+  my $last_index = $#{$entries_ref};
+  for (my $i = 0; $i + 1 < $last_index; ++$i) {
+    my ($j, $k) = find_pair($target - ${$entries_ref}[$i],$i+1,$last_index,$entries_ref);
+    return ($i,$j,$k) if defined $j;
+  }
+  return (undef, undef, undef);
+}
+
+# Read and sort the input
+my (@input) = (sort {$a <=> $b} (map {int($_)} (<>)));
+my ($i, $j, $k) = find_triple(2020, \@input);
+print ("$input[$i] * $input[$j] * $input[$k] = ",($input[$i] * $input[$j] * $input[$k]),"\n") if defined $i;
+exit 0;

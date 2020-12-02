@@ -1,0 +1,66 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Problem statement: https://adventofcode.com/2020/day/1
+#
+# Given a list of numbers, find two that sum to 2020, and then
+# print their product. If no such pair exists, print nothing.
+
+use strict;
+
+
+# Returns either the pair of values that sum to 2020, or a pair of undefs if there is
+# no such pair.
+sub find_pair(@) {
+  # Sort the entries
+  my (@entries) = sort {$a <=> $b} (@_);
+  my $target = 2020;
+  # We'll use two cursors to index the entries, one on the left and another on the right.
+  my $left = 0;
+  my $right = $#entries; # Index of the last entry.
+
+  # The invariant is that if the indices of the winning pair are positions (i,j)
+  # with i < j, then   $left <= i < j <= $right.
+  while ($left < $right) {
+    my $value_left = $entries[$left];
+    my $value_right = $entries[$right];
+    my $sum = $value_left + $value_right;
+    if ($sum == $target) {
+      # We found a winning pair!
+      # Clean up the text of the result.
+      return ($value_left, $value_right);
+    }
+    if ($sum < $target) {
+      # We are below target. We have to increase our estimate.
+      # We have two options: move the left cursor right, or the right
+      # cursor right. But by the invariant, the solution does not have
+      # one endpoint outside of [left, right].  So that eliminates
+      # moving the right marker right.  So move the left marker right.
+      $left++;
+    } elsif ($sum > $target) {
+      # Use similar logic to reason that we have to move the right
+      # marker left.
+      $right--;
+    }
+  }
+  return (undef, undef);
+}
+
+# Read the input
+my (@input) = (map {int($_)} (<>));
+my ($value0, $value1) = find_pair(@input);
+print ("$value0 * $value1 = ",($value0 * $value1),"\n") if defined $value0;
+exit 0;
