@@ -11,7 +11,12 @@ Man alive, it's powerful, and the [community](https://www.cpan.org/) is terrific
 
 All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
 
-## The Days
+## December 2020
 
-[1](1) - Sum 2020
-[2](2) - Password Philosophy
+| Sunday    | Monday    | Tuesday   | Wednesday | Thursday  | Friday    | Saturday  |
+|-----------|:----------|:----------|:----------|:----------|:----------|:----------|
+|           |           |         [1](1)<br>Sum 2020 |         [2](2)<br>Password<br>Philosophy |         3 |         4 |         5 |
+|         6 |         7 |         8 |         9 |        10 |        11 |        12 |
+|        13 |        14 |        15 |        16 |        17 |        18 |        19 |
+|        20 |        21 |        22 |        23 |        24 |        25 |        26 |
+|        27 |        28 |        29 |        30 |        31 |           |           |
