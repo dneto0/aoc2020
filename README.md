@@ -14,3 +14,4 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
 ## The Days
 
 [1](1) - Sum 2020
+[2](2) - Password Philosophy
