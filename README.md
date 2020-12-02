@@ -13,10 +13,59 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
 
 ## December 2020
 
-| Sunday    | Monday    | Tuesday   | Wednesday | Thursday  | Friday    | Saturday  |
-|-----------|:----------|:----------|:----------|:----------|:----------|:----------|
-|           |           |         [1](1)<br>Sum 2020 |         [2](2)<br>Password<br>Philosophy |         3 |         4 |         5 |
-|         6 |         7 |         8 |         9 |        10 |        11 |        12 |
-|        13 |        14 |        15 |        16 |        17 |        18 |        19 |
-|        20 |        21 |        22 |        23 |        24 |        25 |        26 |
-|        27 |        28 |        29 |        30 |        31 |           |           |
+<table>
+ <thead>
+   <th>Sunday
+   <th>Monday
+   <th>Tuesday
+   <th>Wednesday
+   <th>Thursday
+   <th>Friday
+   <th>Saturday
+ </thead>
+ <tr valign=top>
+  <td>
+  <td>
+  <td><a href="1">1</a><br> Sum  2020
+  <td><a href="2">2</a><br>Password<br>Philosophy
+  <td>3
+  <td>4
+  <td>5
+ </tr>
+ <tr valign=top>
+  <td>6
+  <td>7
+  <td>8
+  <td>9
+  <td>10
+  <td>11
+  <td>12
+ </tr>
+ <tr valign=top>
+  <td>13
+  <td>14
+  <td>15
+  <td>16
+  <td>17
+  <td>18
+  <td>19
+ </tr>
+ <tr valign=top>
+  <td>20
+  <td>21
+  <td>22
+  <td>23
+  <td>24
+  <td>25
+  <td>26
+ </tr>
+ <tr valign=top>
+  <td>27
+  <td>28
+  <td>29
+  <td>30
+  <td>31
+  <td>
+  <td>
+ </tr>
+</table>
