@@ -26,9 +26,9 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
  <tr valign=top>
   <td>
   <td>
-  <td><a href="1">1</a><br> Sum  2020
-  <td><a href="2">2</a><br>Password<br>Philosophy
-  <td>3
+  <td>1<br><a href="1"> Sum  2020</a>
+  <td>2<br><a href="2">Password<br>Philosophy</a>
+  <td>3<br><a href="3">Toboggan<br>Trajectory</a>
   <td>4
   <td>5
  </tr>
