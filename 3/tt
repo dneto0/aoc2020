@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Problem statement: https://adventofcode.com/2020/day/1
+#
+# Given a list of numbers, find three that sum to 2020, and then
+# print their product. If no such pair exists, print nothing.
+
+use strict;
+
+my @grid = (map {chomp; $_} (<>));
+
+my $num_trees = 0;
+my $x = 0;
+my $y = 0;
+my $step_x = 3;
+my $step_y = 1;
+while ($y <= $#grid) {
+  my $landed = substr($grid[$y], ($x % length $grid[$y]), 1);
+  print "x $x y $y";
+  print " <$landed>\n";
+  $num_trees++ if $landed eq '#';
+  $x += $step_x;
+  $y += $step_y;
+}
+print "$num_trees\n";
+exit 0;
