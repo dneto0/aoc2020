@@ -1,0 +1,122 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Problem statement: https://adventofcode.com/2020/day/1
+#
+# Given a list of numbers, find three that sum to 2020, and then
+# print their product. If no such pair exists, print nothing.
+
+use strict;
+use Data::Dumper;
+
+# List of hash references, where each hash reference is the key-value
+# set for a single passport
+my @passports = ();
+
+my %current = ();
+my $have_data = 0;
+foreach my $line (<>) {
+  if ($line =~ m/^\s+$/) {
+    push @passports, {(%current)};
+    %current = ();
+    $have_data = 0;
+  } else {
+    foreach my $pair (split(/\s+/, $line)) {
+      if ($pair =~ m/([^:]+)+:(\S+)/) {
+        $current{$1} = $2;
+        $have_data = 1;
+      }
+    }
+  }
+}
+push(@passports, {(%current)}) if $have_data;
+
+my %required = qw(
+    byr (Birth-Year)
+    iyr (Issue-Year)
+    eyr (Expiration-Year)
+    hgt (Height)
+    hcl (Hair-Color)
+    ecl (Eye-Color)
+    pid (Passport-Id)
+);
+my %valid_eye_colour = (map { ($_,1) } qw(amb blu brn gry grn hzl oth));
+
+my $num_valid = 0;
+PASSPORT: foreach my $passport (@passports) {
+  print Dumper($passport);
+  my @failures = ();
+  my %missing = %required;
+
+  # SNAFU1: I was using foreach instead of while, and that messed up the "each" iteration.
+  # I've always found 'each' finicky, and tended to just get keys and then do the lookup
+  # myself.  I guess I should have followed my own guidance.
+
+  # STYLE: At first I wrote it cleverly, like this:
+  #     next PASSPORT unless ($value=~m/^\d{4}$/ and 1920 <= $value and $value <= 2002);
+  #
+  # But then when things weren't working I didn't have any good way to debug it. I ended up
+  # inserting a bunch of "print"s, now removed.  I then went back to my old rule: "whenever
+  # there's a pass/fail, rather than returning only a boolean, instead return the reason
+  # for failure". That makes it way easier to debug.  So now the code accumulates a list
+  # of failures, that can then be reviewed manually.
+  #
+  # I was very much influenced by Philip Wadler's paper "How to replace failure by
+  # a list of successes".
+  # https://dl.acm.org/doi/10.5555/5280.5288
+
+  while (my ($key,$value) = each %{$passport}) {
+    delete $missing{$key};
+    if ($key eq 'byr') {
+      push(@failures,"bad $key: $value") unless ($value=~m/^\d{4}$/ and 1920 <= $value and $value <= 2002);
+    }
+    if ($key eq 'iyr') {
+      push(@failures,"bad $key: $value") unless ($value=~m/^\d{4}$/ and 2010 <= $value and $value <= 2020);
+    }
+    if ($key eq 'eyr') {
+      push(@failures,"bad $key: $value") unless ($value=~m/^\d{4}$/ and 2020 <= $value and $value <= 2030);
+    }
+    if ($key eq 'hgt') {
+      if ($value =~ m/^(\d+)cm$/) {
+        my $h = $1 + 0;
+        push(@failures,"bad $key: $value") unless (150 <= $h and $h <= 193);
+      } elsif ($value =~ m/^(\d+)in$/) {
+        my $h = $1 + 0;
+        push(@failures,"bad $key: $value") unless (59 <= $h and $h <= 76);
+      } else {
+        push(@failures,"bad $key: $value");
+      }
+    }
+    if ($key eq 'hcl') {
+      push(@failures,"bad $key: $value") unless $value=~m/^#[0-9a-f]{6}$/;
+    }
+    if ($key eq 'ecl') {
+      push(@failures,"bad $key: $value") unless $valid_eye_colour{$value};
+    }
+    if ($key eq 'pid') {
+      push(@failures,"bad $key: $value") unless $value =~ m/^\d{9}$/;
+    }
+  }
+  push (@failures, (map { "missing: '$_'"} (keys %missing)));
+  if ($#failures >= 0) {
+    print join("\n",@failures),"\n\n";
+  } else {
+    $num_valid++;
+  }
+}
+
+print "\n\n$num_valid\n";
+exit 0;
