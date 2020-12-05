@@ -1,0 +1,62 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Problem statement: https://adventofcode.com/2020/day/1
+#
+# Given a list of numbers, find three that sum to 2020, and then
+# print their product. If no such pair exists, print nothing.
+
+use strict;
+
+
+sub seat_id($) {
+  my $code = shift;
+  my $id = 0;
+  my %value = qw(F 0 B 1 L 0 R 1);
+  foreach my $char (split(//,$code)) {
+    $id = 2 * $id + $value{$char};
+  }
+  return $id;
+}
+
+my $max_code = -1;
+my $max_id = -1;
+
+# $occupied[$id] = 1 when a seat is occupied.
+my @occupied = ();
+foreach my $line (<>) {
+  if ($line =~ m/([FBLR]+)/) {
+    my $code = $1;
+    my $seat_id = seat_id($code);
+    $occupied[$seat_id] = 1;
+  }
+}
+
+my $candidate = 1;
+while ($candidate < $#occupied) {
+
+  last if
+    ($occupied[$candidate-1] == 1)
+      and
+    ($occupied[$candidate  ] == 0)
+      and
+    ($occupied[$candidate+1] == 1)
+  ;
+  $candidate++;
+}
+
+print "Your open seat has ID $candidate\n";
+exit 0;

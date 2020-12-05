@@ -30,7 +30,7 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
   <td>2<br><a href="2">Password<br>Philosophy</a>
   <td>3<br><a href="3">Toboggan<br>Trajectory</a>
   <td>4<br><a href="4">Passport<br>Processing</a>
-  <td>5
+  <td>5<br><a href="5">Binary<br>Boarding</a>
  </tr>
  <tr valign=top>
   <td>6
