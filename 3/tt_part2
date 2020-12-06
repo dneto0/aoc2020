@@ -14,15 +14,9 @@
 # limitations under the License.
 
 
-# Problem statement: https://adventofcode.com/2020/day/1
-#
-# Given a list of numbers, find three that sum to 2020, and then
-# print their product. If no such pair exists, print nothing.
-
 use strict;
 
 my @grid = (map {chomp; $_} (<>));
-
 
 sub num_trees_for_slope($$) {
   my ($step_x, $step_y) = @_;

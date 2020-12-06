@@ -14,13 +14,7 @@
 # limitations under the License.
 
 
-# Problem statement: https://adventofcode.com/2020/day/1
-#
-# Given a list of numbers, find three that sum to 2020, and then
-# print their product. If no such pair exists, print nothing.
-
 use strict;
-
 
 sub seat_id($) {
   my $code = shift;
