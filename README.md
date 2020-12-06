@@ -26,14 +26,14 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
  <tr valign=top>
   <td>
   <td>
-  <td>1<br><a href="1"> Sum  2020</a>
+  <td>1<br><a href="1">Sum  2020</a>
   <td>2<br><a href="2">Password<br>Philosophy</a>
   <td>3<br><a href="3">Toboggan<br>Trajectory</a>
   <td>4<br><a href="4">Passport<br>Processing</a>
   <td>5<br><a href="5">Binary<br>Boarding</a>
  </tr>
  <tr valign=top>
-  <td>6
+  <td>6<br><a href="6">Custom<br>Customs</a>
   <td>7
   <td>8
   <td>9

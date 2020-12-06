@@ -1,0 +1,65 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Problem statement: https://adventofcode.com/2020/day/1
+#
+# Given a list of numbers, find three that sum to 2020, and then
+# print their product. If no such pair exists, print nothing.
+
+use strict;
+
+# Returns the number of common answers to everyone in this group.
+sub num_common_yes(@) {
+  # The questions to which each member in the group answered yes, one line per member.
+  my @answers = @_;
+  # Watch out for an empty answer list.  You need this to avoid undefinedness
+  # weirdness if there were an extra empty line at the end of the input.
+  return 0 if $#answers < 0;
+
+  # We're doing a lot in one line: Construct a dictionary whose keys
+  # are the questions to which the first person answered yes.  Maintain
+  # the invariant by updating the common set in the loop.
+  # key is the letter to which everyone answered yes, value is 1
+  my %common = (map { ($_,1) } split(//,shift @answers));
+  foreach my $line (@answers) {
+    my %new_common = ();
+    # We filter by checking for inclusion of the new answers in the already-computed
+    # common list for everyone before this person.
+    foreach my $key (split(//,$line)) {
+      $new_common{$key} = 1 if exists $common{$key};
+    }
+    # Then copy the new common list over the old one.
+    %common = %new_common;
+  }
+  my @uniques = (keys %common);
+  return $#uniques + 1;
+}
+
+my @group_answers = ();
+my $sum = 0;
+foreach my $line (<>) {
+  if ($line =~ m/^\s+$/){
+    $sum += num_common_yes(@group_answers);
+    @group_answers = ();
+  } else {
+    $line =~ s/[^a-z]//g;
+    push @group_answers, $line;
+  }
+}
+$sum += num_common_yes(@group_answers);
+
+print "\nsum: $sum\n";
+exit 0;
