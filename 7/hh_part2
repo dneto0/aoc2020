@@ -1,0 +1,56 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+use strict;
+use Data::Dumper;
+
+# Key is the bag colour name, e.g. 'vibrant bronze'
+# Value is a reference to hash of pairs: key is bag name, value is number.
+my %rules = ();
+
+foreach my $line (<>) {
+  chomp $line;
+  if ($line =~ m/^(.*) bags contain\s+(.*)\./) {
+    my ($outer,$contents) = ($1,$2);
+    my %contents = ();
+    if ($contents =~ m/no other/) {
+      # nothing more
+    } else {
+      foreach my $inner (split(/ bags?,? */, $contents)) {
+        if ($inner =~ m/(\d+)\s+(.+)/) {
+          $contents{$2} = $1 + 0;
+        }
+      }
+    }
+    $rules{$outer} = {%contents};
+  }
+}
+# Dump the rule set, to make sure you parsed the sample input correctly.
+# print Dumper(\%rules);
+
+# Returns the number of bags starting at the given bag.
+sub num_bags($) {
+  my ($bag) = @_ ;
+  my $result = 1; # Count the bag itself
+  while (my ($inner,$count) = each %{$rules{$bag}}) {
+    $result += $count * num_bags($inner);
+  }
+  return $result;
+}
+
+my $answer = num_bags('shiny gold') - 1;  # don't count the shiny gold bag itself
+
+print "Your shiny gold bag contains $answer bags!\n";
+exit 0;

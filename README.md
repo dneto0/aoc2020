@@ -34,7 +34,7 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
  </tr>
  <tr valign=top>
   <td>6<br><a href="6">Custom<br>Customs</a>
-  <td>7
+  <td>7<br><a href="7">Handy<br>Haversacks</a>
   <td>8
   <td>9
   <td>10
