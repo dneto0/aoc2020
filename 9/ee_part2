@@ -1,0 +1,59 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+use strict;
+
+my $preamble_len = 25;
+my @numbers = ();
+foreach my $line (<>) {
+  if ($line =~ m/(\d+)/) {
+    push @numbers, $1+0;
+  }
+}
+
+my $i = 0;
+ITERATION: for ($i = $preamble_len; $i < $#numbers; $i++) {
+  my $valid = 0;
+  for (my $first = $i-$preamble_len; $first < $i; $first++) {
+    for (my $second = $first+1; $second < $i; $second++) {
+      if ($numbers[$i] == $numbers[$first] + $numbers[$second]) {
+        $valid = 1;
+      }
+    }
+  }
+  last ITERATION unless $valid;
+}
+my $target = $numbers[$i];
+print "First invalid is at $i with value $target\n";
+
+
+WEAKNESS: for ($i = $preamble_len; $i < $#numbers; $i++) {
+  for (my $first = 0; $first < $i; $first++) {
+    my $sum = $numbers[$first];
+    my $smallest = $sum;
+    my $largest = $sum;
+    for (my $second = $first+1; $second < $i; $second++) {
+      my $this = $numbers[$second];
+      $sum += $this;
+      $smallest = $this if $smallest > $this;
+      $largest = $this if $largest < $this;
+      if ($target == $sum) {
+        my $weakness = $smallest + $largest;
+        print "Weakness is $smallest + $largest = $weakness\n";
+        exit 0;
+      }
+    }
+  }
+}
