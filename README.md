@@ -37,12 +37,12 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
   <td>7<br><a href="7">Handy<br>Haversacks</a>
   <td>8<br><a href="8">Handheld<br>Halting</a>
   <td>9<br><a href="9">Encoding<br>Error</a>
-  <td>10<br><a href="9">Adapter<br>Array</a>
-  <td>11<br><a href="9">Seating<br>System<br>(does not work)</a>
-  <td>12<br><a href="9">Shuttle<br>Search</a>
+  <td>10<br><a href="10">Adapter<br>Array</a>
+  <td>11<br><a href="11">Seating<br>System<br>(does not work)</a>
+  <td>12<br><a href="12"></a>
  </tr>
  <tr valign=top>
-  <td>13
+  <td>13<br><a href="13">Shuttle<br>Search</a>
   <td>14
   <td>15
   <td>16
