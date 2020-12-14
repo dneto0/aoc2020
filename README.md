@@ -38,7 +38,7 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
   <td>8<br><a href="8">Handheld<br>Halting</a>
   <td>9<br><a href="9">Encoding<br>Error</a>
   <td>10<br><a href="9">Adapter<br>Array</a>
-  <td>11
+  <td>11<br><a href="9">Seating<br>System</a>
   <td>12
  </tr>
  <tr valign=top>

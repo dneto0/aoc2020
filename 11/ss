@@ -1,0 +1,109 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+use strict;
+use Data::Dumper;
+
+my (@rows) = map { chomp; $_ } <>;
+print Dumper(\@rows);
+my $row_len = length $rows[0];
+my $col_len = $#rows + 1;
+# Linearize it.  Row major order.
+my @seats = ();
+foreach my $row (@rows) {
+  push @seats, split(//,$row);
+}
+
+# Returns the unique index for row i, column j
+sub ind($$) {
+  my ($i,$j) = @_;
+  return $col_len * $i + $j;
+}
+
+# Are two seat arrangments the same?
+sub equal($$) {
+  my ($a,$b) = @_;
+  return join("",@$a) eq join("",@$b);
+}
+
+sub printer(@) {
+  my (@arr) = @_;
+  for (my $row = 0; $row < $col_len ; $row++) {
+    for (my $col = 0; $col < $row_len ; $col++) {
+      print $arr[ind($row,$col)];
+    }
+    print "\n";
+  }
+  print "\n";
+}
+
+# Returns the new state of the seats
+sub iterate($) {
+  my $arr = shift;
+  my @result = (@$arr); # copy
+  for (my $i = 0; $i < $col_len; $i++) {
+    for (my $j = 0; $j < $row_len; $j++) {
+      my $seat = ${$arr}[ind($i,$j)];
+      next if $seat eq '.'; # skip floor seats
+      my $count = 0;
+      foreach my $di ((-1,0,1)) {
+        foreach my $dj ((-1,0,1)) {
+          next if ($di == 0 and $dj == 0);
+          my $row = $i + $di;
+          my $col = $j + $dj;
+          next if $row < 0;
+          next if $row >= $col_len;
+          next if $col < 0;
+          next if $col >= $row_len;
+          $count++ if (${$arr}[ind($row,$col)] eq '#');
+        }
+      }
+      if (($seat eq 'L') and ($count == 0)) {
+        $result[ind($i,$j)] = '#';
+      } elsif (($seat eq '#') and ($count >= 4)) {
+        $result[ind($i,$j)] = 'L';
+      }
+    }
+  }
+  return @result;
+}
+
+while(1) {
+  my (@next) = iterate(\@seats);
+  printer(@next);
+  last if equal(\@seats,\@next);
+  @seats = @next;
+}
+my $occupied = 0;
+my $empty = 0;
+my $floor = 0;
+foreach my $seat (@seats) {
+  $occupied++ if $seat eq '#';
+  $empty++ if $seat eq 'L';
+  $floor++ if $seat eq '.';
+}
+print "$occupied occupied\n";
+print "$empty empty\n";
+print "$floor floor\n";
+print "($col_len * $row_len) = ", $col_len * $row_len,"\n";
+
+my $occ = join('',@seats);
+$occ =~ s/\.//g;
+$occ =~ s/L//g;
+print length "$occ\n";
+
+print "BUT THEY SAY THIS IS THE WRONG ANSWER\n";
+
+
