@@ -38,8 +38,8 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
   <td>8<br><a href="8">Handheld<br>Halting</a>
   <td>9<br><a href="9">Encoding<br>Error</a>
   <td>10<br><a href="9">Adapter<br>Array</a>
-  <td>11<br><a href="9">Seating<br>System</a>
-  <td>12
+  <td>11<br><a href="9">Seating<br>System<br>(does not work)</a>
+  <td>12<br><a href="9">Shuttle<br>Search</a>
  </tr>
  <tr valign=top>
   <td>13
