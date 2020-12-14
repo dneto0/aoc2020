@@ -20,6 +20,8 @@ my (@rows) = map { chomp; $_ } <>;
 print Dumper(\@rows);
 my $row_len = length $rows[0];
 my $col_len = $#rows + 1;
+print "row len $row_len\n";
+print "col len $col_len\n";
 # Linearize it.  Row major order.
 my @seats = ();
 foreach my $row (@rows) {
@@ -29,7 +31,7 @@ foreach my $row (@rows) {
 # Returns the unique index for row i, column j
 sub ind($$) {
   my ($i,$j) = @_;
-  return $col_len * $i + $j;
+  return $row_len * $i + $j;
 }
 
 # Are two seat arrangments the same?
@@ -55,6 +57,7 @@ sub iterate($) {
   my @result = (@$arr); # copy
   for (my $i = 0; $i < $col_len; $i++) {
     for (my $j = 0; $j < $row_len; $j++) {
+      my $ind = ind($i,$j);
       my $seat = ${$arr}[ind($i,$j)];
       next if $seat eq '.'; # skip floor seats
       my $count = 0;
@@ -70,9 +73,13 @@ sub iterate($) {
           $count++ if (${$arr}[ind($row,$col)] eq '#');
         }
       }
+      #print "($i,$j)$ind seat $seat count $count\n";
       if (($seat eq 'L') and ($count == 0)) {
+        #print "  -> #\n";
         $result[ind($i,$j)] = '#';
-      } elsif (($seat eq '#') and ($count >= 4)) {
+      }
+      if (($seat eq '#') and ($count >= 4)) {
+        #print "  -> L\n";
         $result[ind($i,$j)] = 'L';
       }
     }
@@ -104,6 +111,5 @@ $occ =~ s/\.//g;
 $occ =~ s/L//g;
 print length "$occ\n";
 
-print "BUT THEY SAY THIS IS THE WRONG ANSWER\n";
 
 
