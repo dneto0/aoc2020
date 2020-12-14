@@ -1,0 +1,64 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+use strict;
+use Data::Dumper;
+
+# (x,y) cartesian position of the ship
+my ($x, $y) = (0,0);
+# Position of the waypoint, relative to the ship.
+my ($rx, $ry) = (10,1);
+my @insts = map { chomp; $_ } (<>);
+print Dumper(\@insts);
+
+foreach my $inst (@insts) {
+  if ($inst =~ m/^N(\d+)/) {
+    $ry += $1;
+  } elsif ($inst =~ m/^S(\d+)/) {
+    $ry -= $1;
+  } elsif ($inst =~ m/^E(\d+)/) {
+    $rx += $1;
+  } elsif ($inst =~ m/^W(\d+)/) {
+    $rx -= $1;
+  } elsif ($inst =~ m/^L(\d+)/) {
+    my $dir = $1;
+    if ($dir == 0) {
+      # No update.
+    } elsif ($dir == 90) {
+      ($rx,$ry) = (-$ry, $rx);
+    } elsif ($dir == 180) {
+      ($rx,$ry) = (-$rx, -$ry);
+    } elsif ($dir == 270) {
+      ($rx,$ry) = ($ry, -$rx);
+    }
+  } elsif ($inst =~ m/^R(\d+)/) {
+    my $dir = $1;
+    if ($dir == 0) {
+      # No update.
+    } elsif ($dir == 90) {
+      ($rx,$ry) = ($ry, -$rx);
+    } elsif ($dir == 180) {
+      ($rx,$ry) = (-$rx, -$ry);
+    } elsif ($dir == 270) {
+      ($rx,$ry) = (-$ry, $rx);
+    }
+  } elsif ($inst =~ m/^F(\d+)/) {
+    $x += $1 * $rx;
+    $y += $1 * $ry;
+  }
+}
+
+my $manh = abs($x) + abs($y);
+print "Position ($x,$y) or Manhattan $manh units\n";
