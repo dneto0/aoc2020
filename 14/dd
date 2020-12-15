@@ -1,0 +1,49 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+use strict;
+use Data::Dumper;
+
+my $mask = undef;
+my %memory = ();
+foreach my $line (<>) {
+  chomp $line;
+  if ($line =~ m/^mask\s*=\s*([X10]+)/) {
+    $mask = $1;
+  } elsif ($line =~ m/^mem\[(\d+)\]\s*=\s*(\d+)/) {
+    my ($addr, $value) = ($1, $2);
+    my $i = 0;
+    my @bits = split(//, $mask);
+    for ($i = $#bits; $i >= 0; $i--) {
+      my $bit = $bits[$i];
+      my $bit_value = 1 << ($#bits - $i);
+      if ($bit eq '0') {
+        $value = ($value - $bit_value) if ($value & $bit_value);
+      }
+      if ($bit eq '1') {
+        $value = $value | $bit_value;
+      }
+    }
+    $memory{$addr} = $value;
+    print "write $value to $addr\n";
+  }
+}
+print Dumper(\%memory);
+
+my $sum = 0;
+foreach my $value (values %memory) {
+  $sum += $value;
+}
+print "sum $sum\n";
