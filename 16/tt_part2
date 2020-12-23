@@ -1,0 +1,211 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+use strict;
+use Data::Dumper;
+
+my $precomputed_stack = 0;
+
+# list of rules, each rule is an array ref of pairs of start/stop values.
+my @rules = ();
+my @rulenames = ();
+
+my @all_tickets = ();
+my $reading_nearby = 0;
+my $reading_yours = 0;
+my @your_ticket = ();
+foreach my $line (<>) {
+  next if $line =~ m/^\s*$/;
+  if ($line =~ m/^(.*): (\d+)-(\d+) or (\d+)-(\d+)/) {
+    push @rulenames, $1;
+    push @rules, [$2,$3,$4,$5];
+  } elsif ($line =~ m/nearby tickets:/) {
+    $reading_nearby = 1;
+  } elsif ($line =~ m/your ticket:/) {
+    $reading_yours = 1;
+  } elsif ($reading_nearby) {
+    chomp $line;
+    push @all_tickets, $line;
+  } elsif ($reading_yours) {
+    @your_ticket = map {$_ +0;} (split(/,/,$line));
+  }
+}
+
+sub valid($) {
+  my $v = shift;
+  foreach my $rule (@rules) {
+    return 1 if 
+    (($rule->[0] <= $v) and ($v <= $rule->[1])) 
+    or
+    (($rule->[2] <= $v) and ($v <= $rule->[3]));
+  }
+  return 0;
+}
+
+my @tickets = ();
+foreach my $line (@all_tickets) {
+  my $invalid = 0;
+  my (@values) = map {$_ +0;} (split(/,/,$line));
+  foreach my $num (@values) {
+    $invalid = 1 unless valid($num);
+  }
+  push @tickets, [@values] unless $invalid;
+}
+#print "valid tickets: ", Dumper(\@tickets), "\n\n";
+
+sub validrule($$) {
+  my $column = shift;
+  my $ri = shift; # rule index
+  my $rule = $rules[$ri];
+  my $valid = 1;
+  foreach my $ticket (@tickets) {
+    my $v = $ticket->[$column];
+    #print "Rule ",Dumper($rule), "  value $v\n";
+    $valid = 0 unless (
+      (($rule->[0] <= $v) and ($v <= $rule->[1])) 
+      or
+      (($rule->[2] <= $v) and ($v <= $rule->[3])));
+  }
+  #print "             ($column,$ri) -> $valid\n";
+  return $valid;
+}
+
+# valids[$i] is array ref of rule indices that can satisfy ticket column i.
+my (@valids) = map { [] } (0..$#rules);
+foreach my $i ( 0 .. $#rules ) { # Ticket field index
+  foreach my $ri (0 .. $#rules) { # Rule index
+    if (validrule($i,$ri)) {
+      push $valids[$i], $ri;
+    }
+  }
+}
+print "valids array before: \n", Dumper(\@valids);
+
+# Winnow down the lists by removing singletons from other lists.
+my $settled;
+do {
+  $settled = 1;
+  # Find the singletons.
+  # Key is rule index, value is which list it belongs to.
+  my %singles = ();
+  foreach my $i (0..$#rules) {
+    if ($#{$valids[$i]} == 0) {
+      $singles{$valids[$i]->[0]} = $i;
+    }
+  }
+  # Remove singletons from the other lists.
+  foreach my $i (0..$#rules) {
+    my @filtered = 
+      grep {
+        my $ri = $_;
+        my $probe = $singles{$ri};
+        (!defined($probe)) or ($probe == $i);
+      }
+      @{$valids[$i]};
+    if ($#filtered < $#{$valids[$i]}) {
+      # The list shrank.
+      $settled = 0;
+      $valids[$i] = [@filtered];
+    }
+  }
+} until ($settled);
+print "valids array after: \n", Dumper(\@valids);
+
+# Find a satisfying assignment.
+# stack[i] is the index into $valids[$i] that we are proposing.
+my @stack = ();
+sub is_used($) {
+  my $rule = shift;
+  foreach my $i (0..$#stack) {
+    if ($rule == $valids[$i]->[$stack[$i]]) {
+      #print " is_used($rule) -> 1\n";
+      return 1;
+    }
+  }
+  #print " is_used($rule) -> 0\n";
+  return 0;
+}
+
+if ($precomputed_stack) {
+  @stack = map {int($_); } qw( 0 0 1 1 2 1 3 4 2 4 5 1 8 8 7 11 10 6 4 11);
+} else {
+  # Ha!  I used this exhaustive enumeration with the above (bad) list.
+  # It did terminate.
+  my $count = 0;
+  while ($#stack < $#rules) {
+    if ($count == 10000) {
+      print "  stack: ", join(' ', @stack),"\n";
+      $count = 0;
+    }
+    $count++;
+    if ($#stack < 0) {
+      push @stack, 0;
+    } elsif ($stack[$#stack] <= $#{$valids[$#stack]}) {
+      # Have not exhausted the candidates at the top of the stack.
+      # Try a candidate next one
+      my $next_top = $#stack+1;
+      my $found = undef;
+      my $i = 0;
+      while ($i <= $#{$valids[$next_top]}) {
+        my $candidate = $valids[$next_top]->[$i];
+        #print "   cand $candidate\n";
+        if (is_used($candidate)) {
+          $i++;
+        } else {
+          $found = $candidate;
+          last;
+        }
+      }
+      #print "found $found\n";
+      if (defined $found) {
+        # Try another candidate for the next column.
+        push @stack, $i;
+      } else {
+        # Could not satisfy
+        # Really should check for repeats!
+        $stack[$#stack]++;
+      }
+    } else {
+      pop @stack;
+      # Really should check for repeats!
+      $stack[$#stack]++;
+    }
+  }
+}
+print "stack: ", Dumper(\@stack);
+
+my @rule_index = map { my $i = $_; $valids[$i]->[$stack[$i]] } (0..$#rules);
+
+# Check 
+foreach my $i ( 0 .. $#rules ) { # Ticket field index
+  print "Column $i uses rule $rule_index[$i]...";
+  if (validrule($i,$rule_index[$i])) {
+    print "valid\n";
+  } else {
+    print "invalid\n";
+  }
+}
+
+my $product = 1;
+foreach my $i (0..$#rules) {
+  my $ri = $rule_index[$i];
+  next unless defined $ri;
+  if ($rulenames[$ri] =~ m/^departure/) {
+    my $field = $your_ticket[$i];
+    print "column $i  rule $ri ", $rulenames[$ri]," -> $field\n";
+    $product *= $field;
+  }
+}
+print $product,"\n";
