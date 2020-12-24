@@ -48,7 +48,7 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
   <td>16<br><a href="16">Ticket<br>Translation</a>
   <td>17<br><a href="17">Conway<br>Cubes</a>
   <td>18<br><a href="18">Operation<br>Order</a>
-  <td>19
+  <td>19<br><a href="19">Monster<br>Messages</a>
  </tr>
  <tr valign=top>
   <td>20

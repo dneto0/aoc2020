@@ -1,0 +1,133 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+use strict;
+use Data::Dumper;
+
+# Key is rule number. Value is an object which is one of the
+# rule classes below: Char, Sequence, Alternate.
+my %rule = ();
+
+package Char;
+sub new($$) {
+  my ($class,$char) = @_;
+  my $self = [$char];
+  bless $self, $class;
+  return $self;
+}
+# Matches a string.
+# Returns a pair:
+#   0, string: failed match
+#   1, string: successful match, and remaining string.
+sub match($$) {
+  my ($self,$str) = @_;
+  if ($str =~ m/(.)(.*)/) {
+    my ($first,$rest) = ($1,$2);
+    if ($first eq ${$self}[0]) {
+      return (1, $rest);
+    }
+  }
+  return (0, $str);
+}
+
+package Sequence;
+sub new($@) {
+  # The parts are numbers of some other rules.
+  my ($class,@parts) = @_;
+  my $self = [@parts];
+  bless $self, $class;
+  return $self;
+}
+sub match($$) {
+  my ($self,$str) = @_;
+  my $ok;
+  foreach my $part (@$self) {
+    ($ok, $str) = $rule{$part}->match($str);
+    return (0, $str) unless $ok;
+  }
+  return 1, $str;
+}
+
+package Alternate;
+sub new($@) {
+  # The parts are other rules, or the numbers naming those other rules.
+  my ($class,@parts) = @_;
+  my $self = [@parts];
+  bless $self, $class;
+  return $self;
+}
+sub match($$) {
+  my ($self,$str) = @_;
+  foreach my $part (@$self) {
+    my $subrule = (ref $part ? $part : $rule{$part});
+    my ($ok, $remain) = $subrule->match($str);
+    return (1, $remain) if $ok;
+  }
+  return 0, $str;
+}
+
+
+package main;
+
+my @strings = ();
+my $in_strings;
+foreach my $line (<>) {
+  chomp $line;
+  if ($line =~ m/^(\d+):\s*"(.)"/) {
+    $rule{$1+0} = new Char($2);
+  } elsif ($line =~ m/^(\d+):\s+(\d+)\s+(\d+)\s+\|\s+(\d+)\s+(\d+)$/) {
+    my ($i,$a,$b,$c,$d) = map {$_+0;} ($1,$2,$3,$4,$5);
+    $rule{$i} = new Alternate(
+                   new Sequence($a,$b),
+                   new Sequence($c,$d));
+  } elsif ($line =~ m/^(\d+):\s+(\d+)\s+\|\s+(\d+)$/) {
+    my ($i,$a,$b) = map {$_+0;} ($1,$2,$3);
+    $rule{$i} = new Alternate($a,$b);
+  } elsif ($line =~ m/^(\d+):\s+(\d+)\s+(\d+)$/) {
+    my ($i,$a,$b) = map {$_+0;} ($1,$2,$3);
+    $rule{$i} = new Sequence($a,$b);
+  } elsif ($line =~ m/^(\d+):\s+(\d+)$/) {
+    my ($i,$a) = map {$_+0;} ($1,$2);
+    $rule{$i} = new Sequence($a);
+  } elsif ($line =~ m/^\s*$/) {
+    $in_strings = 1;
+  } elsif ($in_strings and $line =~ m/.+/) {
+    push @strings, $line;
+  } else {
+    die "unerecognized line: $line\n";
+  }
+}
+
+print Dumper(\%rule);
+print Dumper(\@strings);
+
+sub matched($) {
+  my $str = shift;
+  my ($ok, $remain) = $rule{0}->match($str);
+  return (($ok == 1) and ($remain eq ''));
+}
+
+my $num = 0;
+foreach my $str (@strings) {
+  print "$str -> ";
+  if (matched($str)) {
+    $num++;
+    print "YEA\n";
+  } else {
+    print "NO\n";
+  }
+}
+print "\n$num matched\n";
+
