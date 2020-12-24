@@ -1,0 +1,121 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+use strict;
+use Data::Dumper;
+
+# HA. This is SmallTalk order of operations too!
+
+package Num;
+sub new($$) {
+  my ($class,$value) = @_;
+  $value = $value + 0;
+  my $self = [$value];
+  bless $self, $class;
+  return $self;
+}
+sub eval {
+  my $self = shift;
+  return $self->[0];
+}
+
+package Binary;
+sub new($$$) {
+  my ($class,$lhs,$op,$rhs) = @_;
+  my $self = [$lhs, $op, $rhs];
+  bless $self, $class;
+  return $self;
+}
+sub eval {
+  my $self = shift;
+  my $lhs = $self->[0]->eval();
+  my $rhs = $self->[2]->eval();
+  if ($self->[1] eq '+') {
+    return $lhs + $rhs;
+  }
+  return $lhs * $rhs;
+}
+
+package main;
+
+my (@exprs) = map { chomp; $_ } <>;
+
+sub parse($) {
+  my $str = shift;
+  my @stack = ([]);
+  while ($str ne '') {
+    #print "$str: ", Dumper(\@stack),"\n";
+    if ($str =~ m/^\s+(.*)/) {
+      $str = $1;
+    } elsif ($str =~ m/^\((.*)/) {
+      $str = $1;
+      push @stack, [];
+    } elsif ($str =~ m/^\)(.*)/) {
+      $str = $1;
+      my @top = @{pop @stack};
+      # It's a singleton, or a triple.
+      my $subexpr;
+      if ($#top == 0) {
+        $subexpr = $top[0];
+      } elsif ($#top == 2) {
+        $subexpr = new Binary($top[0], $top[1], $top[2]);
+      } else {
+        die "unexpected closing of a subexpr: ", Dumper(\@top);
+      }
+      push @{$stack[$#stack]}, $subexpr;
+    } elsif ($str =~ m/^(\d+)(.*)/) {
+      my $num = $1;
+      $str = $2;
+      push @{$stack[$#stack]}, new Num($1);
+    } elsif ($str =~ m/^(\+|\*)(.*)/) {
+      my $op = $1;
+      $str = $2;
+      push @{$stack[$#stack]}, $op;
+    } else {
+      die "Failed to parse '$str'\n";
+    }
+    my $topref = $stack[$#stack];
+    if ($#$topref == 4) {
+      pop @stack;
+      my ($a,$op0,$b,$op1,$c) = @$topref;
+      if ($op1 eq '+') {
+        push @stack, [ $a,
+                       $op0, 
+                       new Binary($b, $op1, $c) ];
+      } else {
+        push @stack, [ new Binary($a, $op0, $b),
+                       $op1,
+                       $c ];
+      }
+    }
+  }
+  my @top = @{$stack[0]};
+  my $subexpr;
+  if ($#top == 0) {
+    $subexpr = $top[0];
+  } elsif ($#top == 2) {
+    $subexpr = new Binary($top[0], $top[1], $top[2]);
+  }
+  return $subexpr;
+}
+
+my $sum = 0;
+foreach my $str (@exprs) {
+  my $expr = parse($str);
+  my $val = $expr->eval();
+  print "$str ----> $val\n";
+  $sum += $val;
+}
+print "\nTotal sum is $sum\n";

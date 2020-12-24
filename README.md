@@ -46,8 +46,8 @@ All the code in this repo is licensed under the Apache 2.0 [license](LICENSE).
   <td>14<br><a href="14">Docking<br>Data</a>
   <td>15<br><a href="15">Rambunctious<br>Recitation</a>
   <td>16<br><a href="16">Ticket<br>Translation</a>
-  <td>17
-  <td>18
+  <td>17<br><a href="17">Conway<br>Cubes</a>
+  <td>18<br><a href="18">Operation<br>Order</a>
   <td>19
  </tr>
  <tr valign=top>
