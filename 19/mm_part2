@@ -1,0 +1,212 @@
+#!/usr/bin/env perl
+# Copyright 2020 David Neto
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+use strict;
+use Data::Dumper;
+
+# Key is rule number. Value is an object which is one of the
+# rule classes below: Char, Sequence, Alternate.
+my %rule = ();
+
+# The "trick" is to stare at the rules and realize that if we match
+# from right to left, then we don't need to guess how many repetitions
+# of the equal-count or one-or-morepatterns to use.
+# So this processes sequences from right to left, and the character match
+# matches the suffix, not the prefix.
+
+package Char;
+sub new($$$) {
+  my ($class,$i,$char) = @_;
+  my $self = [$i,$char];
+  bless $self, $class;
+  return $self;
+}
+# Matches suffix of a string.
+# Returns a pair:
+#   0, string: failed match, and remaining prefix
+#   1, string: successful match, and remaining prefix
+sub match($$) {
+  my ($self,$str) = @_;
+  my ($i,$char) = @$self;
+  if ($str =~ m/(.*)(.)$/) {
+    my ($prefix,$last) = ($1,$2);
+    if ($last eq $char) {
+      return (1, $prefix);
+    }
+  }
+  return (0, $str);
+}
+
+package Sequence;
+sub new($$@) {
+  # The parts are numbers of some other rules.
+  my ($class,$i,@parts) = @_;
+  my $self = [$i,@parts];
+  bless $self, $class;
+  return $self;
+}
+
+sub match($$) {
+  my ($self,$str) = @_;
+  my ($i,@parts) = @$self;
+  my $ok;
+  my $prefix = $str;
+  foreach my $part (reverse @parts) {
+    ($ok, $prefix) = $rule{$part}->match($prefix);
+    return (0, $str) unless $ok;
+  }
+  return (1, $prefix);
+}
+
+package Alternate;
+sub new($$@) {
+  # The parts are other rules, or the numbers naming those other rules.
+  my ($class,$i,@parts) = @_;
+  my $self = [$i,@parts];
+  bless $self, $class;
+  return $self;
+}
+sub match($$) {
+  my ($self,$str) = @_;
+  my ($i,@parts) = @$self;
+  foreach my $part (@parts) {
+    my $subrule = (ref $part ? $part : $rule{$part});
+    my ($ok, $prefix) = $subrule->match($str);
+    return (1, $prefix) if $ok;
+  }
+  return 0, $str;
+}
+
+package OneOrMore;
+sub new($$$) {
+  # An expression of one or more times a subpart.
+  my ($class,$i,$subpart) = @_;
+  my $self = [$i,$subpart];
+  bless $self, $class;
+  return $self;
+}
+sub match($$) {
+  my ($self,$str) = @_;
+  my ($i,$subrule) = @$self;
+  my $num_matched = 0;
+  my $ok;
+  my $prefix = $str;
+  do {
+    ($ok, $prefix) = $rule{$subrule}->match($prefix);
+    $num_matched++ if $ok;
+  } while($ok);
+  if ($num_matched) {
+    return 1, $prefix;
+  }
+  return 0, $str;
+}
+
+package EqualCount;
+sub new($$$$) {
+  # An expression of an equal number of As then Bs.
+  my ($class,$i,$a,$b) = @_;
+  my $self = [$i,$a,$b];
+  bless $self, $class;
+  return $self;
+}
+sub match($$) {
+  # Returns status, number-successful_b, remaining
+  my ($self,$str) = @_;
+  my ($i,$b,$a) = @{$self};
+  my $num_a = 0;
+  my $num_b = 0;
+
+  my $ok;
+  my $prefix = $str;
+  do {
+    ($ok, $prefix) = $rule{$a}->match($prefix);
+    $num_a++ if $ok;
+  } while($ok);
+  return (0, $str) unless $num_a;
+  do {
+    ($ok, $prefix) = $rule{$b}->match($prefix);
+    $num_b++ if $ok;
+  } while($ok and ($num_a > $num_b));
+  if ($num_a == $num_b) {
+    return 1, $prefix;
+  } else {
+    return 0, $str;
+  }
+}
+
+package main;
+
+my @strings = ();
+my $in_strings;
+foreach my $line (<>) {
+  chomp $line;
+  if ($line =~ m/^(\d+):\s*"(.)"/) {
+    $rule{$1+0} = new Char($1+0,$2);
+  } elsif ($line =~ m/^(\d+):\s+(\d+)\s+(\d+)\s+\|\s+(\d+)\s+(\d+)$/) {
+    my ($i,$a,$b,$c,$d) = map {$_+0;} ($1,$2,$3,$4,$5);
+    $rule{$i} = new Alternate($i,
+                   new Sequence($i,$a,$b),
+                   new Sequence($i,$c,$d));
+  } elsif ($line =~ m/^(\d+):\s+(\d+)\s+\|\s+(\d+)$/) {
+    my ($i,$a,$b) = map {$_+0;} ($1,$2,$3);
+    $rule{$i} = new Alternate($i,$a,$b);
+  } elsif ($line =~ m/^(\d+):\s+(\d+)\s+\|\s+(\d+)\s+(\d+)$/) {
+    my ($i,$a,$b,$c) = map {$_+0;} ($1,$2,$3,$4);
+    ($a == $b) or die "Expected $a == $b in: $line\n";
+    ($i == $c) or die "Expected $i == $c in: $line\n";
+    $rule{$i} = new OneOrMore($i,$a);
+  } elsif ($line =~ m/^(\d+):\s+(\d+)\s+(\d+)\s+\|\s+(\d+)\s+(\d+)\s+(\d+)$/) {
+    my ($i,$a,$b,$c,$d,$e) = map {$_+0;} ($1,$2,$3,$4,$5,$6);
+    ($a == $c) or die "Expected $a == $c in: $line\n";
+    ($b == $e) or die "Expected $b == $e in: $line\n";
+    ($i == $d) or die "Expected $i == $d in: $line\n";
+    $rule{$i} = new EqualCount($i,$a,$b);
+  } elsif ($line =~ m/^(\d+):\s+(\d+)\s+(\d+)$/) {
+    my ($i,$a,$b) = map {$_+0;} ($1,$2,$3);
+    $rule{$i} = new Sequence($i,$a,$b);
+  } elsif ($line =~ m/^(\d+):\s+(\d+)$/) {
+    my ($i,$a) = map {$_+0;} ($1,$2);
+    $rule{$i} = new Sequence($i,$a);
+  } elsif ($line =~ m/^\s*$/) {
+    $in_strings = 1;
+  } elsif ($in_strings and $line =~ m/.+/) {
+    push @strings, $line;
+  } else {
+    die "unerecognized line: $line\n";
+  }
+}
+
+print Dumper(\%rule);
+print Dumper(\@strings);
+print "\n";
+
+sub matched($) {
+  my $str = shift;
+  my ($ok, $remain) = $rule{0}->match($str);
+  return (($ok == 1) and ($remain eq ''));
+}
+
+my $num = 0;
+foreach my $str (@strings) {
+  print "$str -> ";
+  if (matched($str)) {
+    $num++;
+    print "YEA\n";
+  } else {
+    print "NO\n";
+  }
+}
+print "\n$num matched\n";
+
